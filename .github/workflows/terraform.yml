@@ -36,7 +36,7 @@ jobs:
   terraform:
     name: "Apply terraform code changes"
     # Where does it run? Select a type of runner (container): Ubuntu/McOs
-    run-ons: ubuntu-latest
+    runs-on: ubuntu-latest
     # Defaults things to use when the job is running
     defaults:
       run:
