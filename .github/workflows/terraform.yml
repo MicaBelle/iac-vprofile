@@ -1,22 +1,22 @@
-  name: "Vprofile IAC"
+name: "Vprofile IAC"
   
-  #When is this executed?
-  on: 
-    #Event 1 - Trigger: git push
-    push:
-      #In any of these branches
-      branches:
-        - main
-        - stage
+#When is this executed?
+on: 
+  #Event 1 - Trigger: git push
+  push:
+    #In any of these branches
+    branches:
+      - main
+      - stage
       #Into any path inside tgerraform
-      paths:
-        - terraform/**
+    paths:
+      - terraform/**
     #Event 2 - Trigger: pull request 
-    pull_request:
-      branches:
-        - main
-      paths: 
-        - terraform/**
+  pull_request:
+    branches:
+      - main
+    paths: 
+      - terraform/**
 
 # ====VARIABLES====
 env:
