@@ -1,86 +1,61 @@
 name: "Vprofile IAC"
-  
-#When is this executed?
-on: 
-  #Event 1 - Trigger: git push
+on:
   push:
-    #In any of these branches
     branches:
       - main
       - stage
-      #Into any path inside tgerraform
-    paths:
+    paths:  
       - terraform/**
-    #Event 2 - Trigger: pull request 
   pull_request:
     branches:
       - main
-    paths: 
+    paths:
       - terraform/**
 
-# ====VARIABLES====
 env:
-  # Credentials for deployment in AWS
-  # These were saved in GitHub secrets
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY_ID: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  # S3 bucket for the Terraform state
-  BUCKET_TF_STATE: ${{ secrets.BUCKET_TF_STATE }}
-  AWS_REGION: us-west-2
-  # The same cluster name mentioned in the variables.tf file
-  EKS_CLUSTER: vprofile-eks
-  
-# =====STEPS=====
+ # Credentials for deployment to AWS
+ AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+ AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+ # S3 bucket for the Terraform state
+ BUCKET_TF_STATE: ${{ secrets.BUCKET_TF_STATE}}
+ AWS_REGION: us-west-2
+ EKS_CLUSTER: vprofile-eks
+
 jobs:
-# Job name
-  terraform:
-    name: "Apply terraform code changes"
-    # Where does it run? Select a type of runner (container): Ubuntu/McOs
-    runs-on: ubuntu-latest
-    # Defaults things to use when the job is running
-    defaults:
-      run:
-        # What to use and what directory?
-        shell: bash
-        working-directory: ./terraform
-    
-    # Like in Ansible 
-    steps:
-      - name: Checkout the source code
-        # Pre-defined actions in GitHub Marketplace, we can fetch the actions there and use them here
-        uses: actions/checkout@v4
-      
-        # Some actions come with a base to use, like this one
-      - name: Setup Terraform with specified version on the runner
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.3
-        
-      - name: Terraform init
-      # We can check information about this task and reference it later
-        id: init 
-        run: terraform init -backend-config="bucket=$BUCKET_TF_STATE"
-      
-      #Terraform code should always be properly formated, if it's not OK, then it will exit the flow
-      - name: Terraform format 
-        id: fmt
-        run: terraform fmt -check
+   terraform:
+     name: "Apply terraform code changes"
+     runs-on: ubuntu-latest
+     defaults:
+       run:
+         shell: bash
+         working-directory: ./terraform
 
-      - name: Terraform validate
-        id: validate
-        run: terraform validate
+     steps:
+       - name: Checkout source code 
+         uses: actions/checkout@v4
 
-      - name: Terraform plan
-        id: plan
-        # Do the plan without colors, no asking for input and leaving the output in a file
-        run: terraform plan -no-color -input=false -out planfile
-        # We are not stopping the execution here but on the following step
-        continue-on-error: true
+       - name: Setup Terraform with specified version on the runner
+         uses: hashicorp/setup-terraform@v2
+         #with:
+         #  terraform_version: 1.6.3
 
-      - name: Terraform plan status
-      # if the step id's plan is failure:
-        if: steps.plan.outcome == 'failure'
-      # kill the shell
-        run: exit 1
+       - name: Terraform init
+         id: init
+         run: terraform init -backend-config="bucket=$BUCKET_TF_STATE"
 
+       - name: Terraform format
+         id: fmt
+         run: terraform fmt -check
 
+       - name: Terraform validate
+         id: validate
+         run: terraform validate
+
+       - name: Terraform plan
+         id: plan
+         run: terraform plan -no-color -input=false -out planfile
+         continue-on-error: true
+
+       - name: Terraform plan status
+         if: steps.plan.outcome == 'failure' 
+         run: exit 1     
