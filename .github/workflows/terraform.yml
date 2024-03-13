@@ -59,7 +59,7 @@ jobs:
       - name: Terraform init
       # We can check information about this task and reference it later
         id: init 
-        run: terraform init - backend-config="bucket=$BUCKET_TF_STATE"
+        run: terraform init -backend-config="bucket=$BUCKET_TF_STATE"
       
       #Terraform code should always be properly formated, if it's not OK, then it will exit the flow
       - name: Terraform format 
